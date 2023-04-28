@@ -9,7 +9,7 @@ import java.time.Duration
 import java.util.Properties;
 
 class Consumer(private val topic: String, private val groupId: String) {
-    private val bootstrapServer: String = "localhost:9092"
+    private val bootstrapServer: String = "localhost:29092"
     private val prop: Properties = Properties()
 
     init {

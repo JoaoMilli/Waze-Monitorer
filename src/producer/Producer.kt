@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory
 import java.util.*
 
 class Producer(private val topic: String) {
-    private val bootstrapServer: String = "localhost:9092"
+    private val bootstrapServer: String = "localhost:29092"
     private val logger: Logger = LoggerFactory.getLogger("Producer")
     private val prop: Properties = Properties()
     private var producer: KafkaProducer<String, Any> ? = null

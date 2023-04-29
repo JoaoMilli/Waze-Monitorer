@@ -56,7 +56,9 @@ fun main () {
 
     var response: String
 
-    val testProducer = Producer("alerts");
+    val jamProducer = Producer("JAM")
+    val roadClosedProducer = Producer("ROAD_CLOSED")
+    val hazardProducer = Producer("HAZARD")
 
     val mapper = jacksonObjectMapper()
 
@@ -104,7 +106,18 @@ fun main () {
                 val dateCompare = timestamp.compareTo(currentTimestamp)
     
                 if (dateCompare > 0) {
-                    testProducer.produce(alert.street)
+
+                    println("TIPO => " + alert.type)
+
+                    when (alert.type) {
+                        "JAM" -> jamProducer.produce(jacksonObjectMapper().writeValueAsString(alert))
+                        "ROAD_CLOSED" -> roadClosedProducer.produce(jacksonObjectMapper().writeValueAsString(alert))
+                        "HAZARD" -> hazardProducer.produce(jacksonObjectMapper().writeValueAsString(alert))
+                        else -> {
+                            print("Evento desconhecido")
+                        }
+                    }
+
                     updateAlertTimestamp = true
                 }
     
@@ -136,7 +149,7 @@ fun main () {
             jamTimestamp = LocalDateTime.now()
         }
 
-        Thread.sleep(10000)
+        Thread.sleep(5000)
 
     }
 

@@ -24,8 +24,6 @@ class WazeApiMock {
     }
 
     fun get(): String {
-        println("ALERT SIZE => " + dataApi.data.alerts.size)
-
         val nAlerts: Int = Random.nextInt(0, 5)
         val pusblishDate = LocalDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"))
 

@@ -4,6 +4,10 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.apache.kafka.clients.consumer.KafkaConsumer
+import org.apache.kafka.clients.producer.Callback
+import org.apache.kafka.clients.producer.KafkaProducer
+import org.apache.kafka.clients.producer.ProducerRecord
+import org.apache.kafka.clients.producer.RecordMetadata
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import wazeApiMock.Alerts
@@ -13,7 +17,28 @@ import java.util.Properties;
 class Consumer(private val topic: String, private val groupId: String) {
     private val bootstrapServer: String = "localhost:29092"
     private val prop: Properties = Properties()
+    private val logger: Logger = LoggerFactory.getLogger("Producer")
     private var eventConsumed = mutableListOf<String>()
+
+    private var producer: KafkaProducer<String, Any>? = null
+    private fun produce(value: Any) = run {
+        val record: ProducerRecord<String, Any> = ProducerRecord<String, Any>("DANGEROUS_ROAD", value)
+        producer?.send(record, Callback(
+            fun(recordMetadata: RecordMetadata, e:Exception?) {
+                if(e == null) {
+                    logger.info("\n Key: " + record.key() + "\n")
+                    logger.info("Topic: " + recordMetadata.topic() + "\n" +
+                            "Partition: " + recordMetadata.partition() + "\n" +
+                            "Offset: " + recordMetadata.offset() + "\n" +
+                            "Timestamp: " + recordMetadata.timestamp()
+                    )
+                } else {
+                    logger.info("\n Failed to produce record \n")
+                }
+            }
+        ) )
+        producer?.flush()
+    }
 
     private fun checkCustomAlert() {
       var alert: Alerts
@@ -31,35 +56,19 @@ class Consumer(private val topic: String, private val groupId: String) {
 
 
       val sorted = alertList.sortedBy {it.street}
-
-        for (obj in sorted) println(obj.street)
-
-        println()
-
       var count = 0
       var lastValue = sorted[0].street
       for (event in sorted) {
-
           if (event.street == lastValue) {
               count++
           }
           else {
                count = 1
                lastValue = event.street
-
           }
-
-          if (count > 1) {
-              println("COMPOSTO => " + event.street)
-              for(event in eventConsumed) println("STRING => " + event.toString())
+          if (count > 2) {
               eventConsumed = eventConsumed.filterNot{ it.contains(event.street)  }.toMutableList()
-
-              println("NOVA LISTA => ")
-
-              for (event in eventConsumed) println(event)
-
-              println()
-
+              produce(jacksonObjectMapper().writeValueAsString(event))
           }
 
       }
@@ -84,7 +93,7 @@ class Consumer(private val topic: String, private val groupId: String) {
                 eventConsumed.add(record.value())
             }
 
-            if (eventConsumed.size > 1) {
+            if (eventConsumed.size > 5) {
                 checkCustomAlert()
             }
 

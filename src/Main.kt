@@ -59,6 +59,7 @@ fun main () {
     val jamProducer = Producer("JAM")
     val roadClosedProducer = Producer("ROAD_CLOSED")
     val hazardProducer = Producer("HAZARD")
+    val policeProducer = Producer("POLICE")
 
     val mapper = jacksonObjectMapper()
 
@@ -106,18 +107,15 @@ fun main () {
                 val dateCompare = timestamp.compareTo(currentTimestamp)
     
                 if (dateCompare > 0) {
-
-                    println("TIPO => " + alert.type)
-
                     when (alert.type) {
                         "JAM" -> jamProducer.produce(jacksonObjectMapper().writeValueAsString(alert))
                         "ROAD_CLOSED" -> roadClosedProducer.produce(jacksonObjectMapper().writeValueAsString(alert))
                         "HAZARD" -> hazardProducer.produce(jacksonObjectMapper().writeValueAsString(alert))
+                        "POLICE" -> policeProducer.produce(jacksonObjectMapper().writeValueAsString(alert))
                         else -> {
                             print("Evento desconhecido")
                         }
                     }
-
                     updateAlertTimestamp = true
                 }
     
@@ -128,28 +126,28 @@ fun main () {
             alertTimestamp = LocalDateTime.now()
         }
 
-        for (jam in data.data.jams) {
-            if (jam.street !== "" && jam.blockAlertType !== "" && jam.publishDate !== "") {
-                val currentTimestamp = dataFormatter.format(jamTimestamp)
-    
-                val timestamp = dataFormatter.format(
-                    LocalDateTime.parse(jam.publishDate, apiDataFormatter)
-                        .minusSeconds(-ZonedDateTime.now().offset.totalSeconds.toLong())
-                )
-                val dateCompare = timestamp.compareTo(currentTimestamp)
-    
-                if (dateCompare > 0) {
-                    println(jam)
-                    updateJamTimestamp = true
-                }
-            }
-        }
-    
-        if (updateJamTimestamp) {
-            jamTimestamp = LocalDateTime.now()
-        }
-
-        Thread.sleep(5000)
+//        for (jam in data.data.jams) {
+//            if (jam.street !== "" && jam.blockAlertType !== "" && jam.publishDate !== "") {
+//                val currentTimestamp = dataFormatter.format(jamTimestamp)
+//
+//                val timestamp = dataFormatter.format(
+//                    LocalDateTime.parse(jam.publishDate, apiDataFormatter)
+//                        .minusSeconds(-ZonedDateTime.now().offset.totalSeconds.toLong())
+//                )
+//                val dateCompare = timestamp.compareTo(currentTimestamp)
+//
+//                if (dateCompare > 0) {
+//                    println(jam)
+//                    updateJamTimestamp = true
+//                }
+//            }
+//        }
+//
+//        if (updateJamTimestamp) {
+//            jamTimestamp = LocalDateTime.now()
+//        }
+//
+//        Thread.sleep(5000)
 
     }
 

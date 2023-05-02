@@ -25,10 +25,10 @@ class WazeApiMock {
 
     fun get(): String {
         val nAlerts: Int = Random.nextInt(0, 5)
-        val pusblishDate = LocalDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"))
+        val publishDate = LocalDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"))
 
         repeat(nAlerts) {
-            val alert = Alerts(getRandomElement(types),getRandomElement(streets), pusblishDate)
+            val alert = Alerts(getRandomElement(types),getRandomElement(streets), publishDate)
             dataApi.data.alerts.add(alert)
         }
 

@@ -64,7 +64,7 @@ fun main () {
     val mapper = jacksonObjectMapper()
 
     var alertTimestamp = LocalDateTime.now()
-    var jamTimestamp = LocalDateTime.now()
+//    var jamTimestamp = LocalDateTime.now()
 
     val dataFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
 
@@ -72,7 +72,7 @@ fun main () {
     val zoneOffset = -ZonedDateTime.now().offset.totalSeconds.toLong()
 
     var updateAlertTimestamp = false
-    var updateJamTimestamp = false
+//    var updateJamTimestamp = false
 
     val client = OkHttpClient()
 
@@ -147,7 +147,7 @@ fun main () {
 //            jamTimestamp = LocalDateTime.now()
 //        }
 //
-//        Thread.sleep(5000)
+        Thread.sleep(5000)
 
     }
 

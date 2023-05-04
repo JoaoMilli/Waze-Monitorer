@@ -18,14 +18,14 @@ class Producer(private val topic: String) {
     fun produce(value: Any) = run {
         val record: ProducerRecord<String, Any> = ProducerRecord<String, Any>(topic, value)
         producer?.send(record, Callback(
-            fun(recordMetadata: RecordMetadata, e:Exception?) {
+            fun(_: RecordMetadata, e:Exception?) {
                 if(e == null) {
-                    logger.info("\n Key: " + record.key() + "\n")
-                    logger.info("Topic: " + recordMetadata.topic() + "\n" +
-                                "Partition: " + recordMetadata.partition() + "\n" +
-                                "Offset: " + recordMetadata.offset() + "\n" +
-                                "Timestamp: " + recordMetadata.timestamp()
-                    )
+                    logger.info("\n Key: " + record.topic() + "\n")
+//                  logger.info("Topic: " + recordMetadata.topic() + "\n" +
+//                              "Partition: " + recordMetadata.partition() + "\n" +
+//                              "Offset: " + recordMetadata.offset() + "\n" +
+//                              "Timestamp: " + recordMetadata.timestamp()
+//                  )
                 } else {
                     logger.info("\n Failed to produce record \n")
                 }

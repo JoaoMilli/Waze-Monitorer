@@ -1,22 +1,20 @@
 package consumer
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.apache.kafka.clients.consumer.KafkaConsumer
-import org.apache.kafka.clients.producer.Callback
-import org.apache.kafka.clients.producer.KafkaProducer
-import org.apache.kafka.clients.producer.ProducerRecord
-import org.apache.kafka.clients.producer.RecordMetadata
+import org.apache.kafka.clients.producer.*
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import wazeApiMock.Alerts
 import java.time.Duration
 import java.time.LocalDateTime
-import java.util.Properties;
+import java.util.Properties
 class Consumer(private val topic: String, private val groupId: String) {
     private val bootstrapServer: String = "localhost:29092"
     private val prop: Properties = Properties()
+    private val propProducer: Properties = Properties()
     private val logger: Logger = LoggerFactory.getLogger("Producer")
     private var eventConsumed = mutableListOf<String>()
 
@@ -26,12 +24,13 @@ class Consumer(private val topic: String, private val groupId: String) {
         producer?.send(record, Callback(
             fun(recordMetadata: RecordMetadata, e:Exception?) {
                 if(e == null) {
-                    logger.info("\n Key: " + record.key() + "\n")
-                    logger.info("Topic: " + recordMetadata.topic() + "\n" +
-                            "Partition: " + recordMetadata.partition() + "\n" +
-                            "Offset: " + recordMetadata.offset() + "\n" +
-                            "Timestamp: " + recordMetadata.timestamp()
-                    )
+                    logger.info("\n Key: " + record.topic() + "\n")
+//                    logger.info("Topic: " + recordMetadata.topic() + "\n" +
+//                            "Partition: " + recordMetadata.partition() + "\n" +
+//                            "Offset: " + recordMetadata.offset() + "\n" +
+//                            "Timestamp: " + recordMetadata.timestamp()
+//                    )
+                    logger.info("\n Data: " + record.value() + "\n")
                 } else {
                     logger.info("\n Failed to produce record \n")
                 }
@@ -42,7 +41,7 @@ class Consumer(private val topic: String, private val groupId: String) {
 
     private fun checkCustomAlert() {
       var alert: Alerts
-      var alertList = mutableListOf<Alerts>()
+      val alertList = mutableListOf<Alerts>()
       for (event:Any in eventConsumed) {
           alert = jacksonObjectMapper().readValue(event as String, Alerts::class.java)
           val dataMais30Min = LocalDateTime.parse(alert.publish_datetime_utc.replace("Z", "")).plusMinutes(30)
@@ -54,21 +53,30 @@ class Consumer(private val topic: String, private val groupId: String) {
           }
       }
 
-
-      val sorted = alertList.sortedBy {it.street}
+        val sorted = alertList.sortedBy {it.street}
       var count = 0
+        var stopCounting = false
       var lastValue = sorted[0].street
       for (event in sorted) {
           if (event.street == lastValue) {
-              count++
+              if(!stopCounting) count++
           }
           else {
                count = 1
                lastValue = event.street
+              stopCounting = false
           }
           if (count > 2) {
               eventConsumed = eventConsumed.filterNot{ it.contains(event.street)  }.toMutableList()
-              produce(jacksonObjectMapper().writeValueAsString(event))
+
+              val customEvent = object {
+                  val street = event.street
+                  val type = event.type
+              }
+              produce(jacksonObjectMapper().writeValueAsString(customEvent))
+
+              count = 0
+              stopCounting = true
           }
 
       }
@@ -76,13 +84,25 @@ class Consumer(private val topic: String, private val groupId: String) {
     }
 
     init {
-        prop.setProperty(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServer);
-        prop.setProperty(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,  "org.apache.kafka.common.serialization.StringDeserializer");
-        prop.setProperty(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringDeserializer");
-        prop.setProperty(ConsumerConfig.GROUP_ID_CONFIG, groupId);
-        prop.setProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+        prop.setProperty(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServer)
+        prop.setProperty(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,  "org.apache.kafka.common.serialization.StringDeserializer")
+        prop.setProperty(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringDeserializer")
+        prop.setProperty(ConsumerConfig.GROUP_ID_CONFIG, groupId)
+        prop.setProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest")
 
-        val logger: Logger = LoggerFactory.getLogger("Consumer");
+        propProducer.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServer)
+        propProducer.setProperty(
+            ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG,
+            "org.apache.kafka.common.serialization.StringSerializer"
+        )
+        propProducer.setProperty(
+            ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
+            "org.apache.kafka.common.serialization.StringSerializer"
+        )
+
+        producer = KafkaProducer<String, Any>(propProducer)
+
+        val logger: Logger = LoggerFactory.getLogger("Consumer")
         val consumer: KafkaConsumer<String, String> = KafkaConsumer<String, String>(prop)
 
         consumer.subscribe(listOf(topic))
@@ -93,7 +113,7 @@ class Consumer(private val topic: String, private val groupId: String) {
                 eventConsumed.add(record.value())
             }
 
-            if (eventConsumed.size > 5) {
+            if (topic !== "DANGEROUS_ROAD" && eventConsumed.size > 5) {
                 checkCustomAlert()
             }
 

@@ -15,8 +15,8 @@ class Producer(private val topic: String) {
     private val prop: Properties = Properties()
     private var producer: KafkaProducer<String, Any> ? = null
 
-    fun produce(value: Any) = run {
-        val record: ProducerRecord<String, Any> = ProducerRecord<String, Any>(topic, value)
+    fun produce(value: Any, key: String) = run {
+        val record: ProducerRecord<String, Any> = ProducerRecord<String, Any>(topic, key, value)
         producer?.send(record, Callback(
             fun(_: RecordMetadata, e:Exception?) {
                 if(e == null) {

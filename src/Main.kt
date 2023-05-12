@@ -108,10 +108,10 @@ fun main () {
     
                 if (dateCompare > 0) {
                     when (alert.type) {
-                        "JAM" -> jamProducer.produce(jacksonObjectMapper().writeValueAsString(alert))
-                        "ROAD_CLOSED" -> roadClosedProducer.produce(jacksonObjectMapper().writeValueAsString(alert))
-                        "HAZARD" -> hazardProducer.produce(jacksonObjectMapper().writeValueAsString(alert))
-                        "POLICE" -> policeProducer.produce(jacksonObjectMapper().writeValueAsString(alert))
+                        "JAM" -> jamProducer.produce(jacksonObjectMapper().writeValueAsString(alert), alert.street)
+                        "ROAD_CLOSED" -> roadClosedProducer.produce(jacksonObjectMapper().writeValueAsString(alert), alert.street)
+                        "HAZARD" -> hazardProducer.produce(jacksonObjectMapper().writeValueAsString(alert), alert.street)
+                        "POLICE" -> policeProducer.produce(jacksonObjectMapper().writeValueAsString(alert), alert.street)
                         else -> {
                             print("Evento desconhecido")
                         }

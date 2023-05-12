@@ -53,9 +53,9 @@ class Consumer(private val topic: String, private val groupId: String) {
           }
       }
 
-        val sorted = alertList.sortedBy {it.street}
+      val sorted = alertList.sortedBy {it.street}
       var count = 0
-        var stopCounting = false
+      var stopCounting = false
       var lastValue = sorted[0].street
       for (event in sorted) {
           if (event.street == lastValue) {
@@ -64,7 +64,7 @@ class Consumer(private val topic: String, private val groupId: String) {
           else {
                count = 1
                lastValue = event.street
-              stopCounting = false
+               stopCounting = false
           }
           if (count > 2) {
               eventConsumed = eventConsumed.filterNot{ it.contains(event.street)  }.toMutableList()
@@ -110,6 +110,7 @@ class Consumer(private val topic: String, private val groupId: String) {
             val records : ConsumerRecords<String, String> = consumer.poll(Duration.ofMillis(200))
             for (record in records ) {
                 logger.info("Value " + record.value())
+                logger.info("Key " + record.key())
                 eventConsumed.add(record.value())
             }
 

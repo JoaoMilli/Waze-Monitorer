@@ -1,5 +1,6 @@
 package wazeApiMock
 
+/* Classes auxiliares para o mock da API do Waze */
 class Jams (
     val street: String,
     val block_alert_type: String,

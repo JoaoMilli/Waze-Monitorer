@@ -5,11 +5,13 @@ import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import kotlin.random.Random
 
-
+/* Classe mock representando a API do Waze */
 class WazeApiMock {
 
     private val streets = arrayOf("Av. Anísio Fernandes Coelho", "Av. Norte Sul", "Av. Carlos Gomes de Sá", "Avenida Carlos Lindenberg","Av. Carlos Lindenberg", "Av. Américo Buaiz")
     private val types = arrayOf("JAM", "POLICE", "HAZARD", "ROAD_CLOSED")
+
+    /* Objeto representando o retorno da requisicao da API */
 
     private val dataApi = object {
         val status = "200"
@@ -19,9 +21,12 @@ class WazeApiMock {
         }
     }
 
+    /* Funcao auxiliar que retorna um elemento aleatorio de um array */
     private fun getRandomElement(array: Array<String>): String {
         return array[Random.nextInt(0, array.size)]
     }
+
+    /* Funcao que representa a chamada da api, gera n alertas diferentes de tipos e ruas aleatorios */
 
     fun get(): String {
         val nAlerts: Int = Random.nextInt(0, 5)
@@ -32,8 +37,7 @@ class WazeApiMock {
             dataApi.data.alerts.add(alert)
         }
 
-        if(dataApi.data.alerts.size > 100) dataApi.data.alerts.dropLast(10)
-
+        if (dataApi.data.alerts.size > 100) dataApi.data.alerts.dropLast(10)
 
         return jacksonObjectMapper().writeValueAsString(dataApi)
     }

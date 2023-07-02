@@ -1,6 +1,6 @@
-import consumer.Consumer
+import consumer.SimpleConsumer
 
 /* Script para iniciar um consumidor complexo de Dangerous Road */
 fun main() {
-    Consumer("DANGEROUS_ROAD", "1")
+    SimpleConsumer("DANGEROUS_ROAD", "1")
 }

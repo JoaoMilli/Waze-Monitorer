@@ -3,10 +3,13 @@ package consumer
 /* Classe que implementa os consumidores de eventos kafka, recebe como parametros o topico que ira consumir e seu
  * group id */
 
+import com.mongodb.ConnectionString
+import com.mongodb.client.MongoClients
+import com.mongodb.client.MongoCollection
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.apache.kafka.clients.consumer.KafkaConsumer
-import org.apache.kafka.clients.producer.*
+import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.common.serialization.Serdes
 import org.apache.kafka.streams.KafkaStreams
 import org.apache.kafka.streams.KeyValue
@@ -14,6 +17,7 @@ import org.apache.kafka.streams.StreamsBuilder
 import org.apache.kafka.streams.StreamsConfig
 import org.apache.kafka.streams.kstream.KStream
 import org.apache.kafka.streams.kstream.TimeWindows
+import org.bson.Document
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.time.Duration
@@ -23,6 +27,11 @@ class Consumer(private val topic: String, private val groupId: String) {
     private val prop: Properties = Properties()
     private val streamConfig: Properties = Properties()
     private val propProducer: Properties = Properties()
+
+    private var connectionString = ConnectionString("mongodb://localhost:27017")
+    private var mongoClient = MongoClients.create(connectionString)
+    private var database = mongoClient.getDatabase("kafka-events")
+    private var collection: MongoCollection<Document> = database.getCollection("events")
 
     init {
         prop.setProperty(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServer)
@@ -63,7 +72,7 @@ class Consumer(private val topic: String, private val groupId: String) {
         val eventCounts = events
             .peek { key, value ->
                 println("Chave1: $key, Valor1: $value")
-                info = value
+                info = "$value/DANGEROUS_ROAD"
             }
             .groupByKey()
             .windowedBy(TimeWindows.of(Duration.ofMinutes(1))) // Janela temporal de 5 minutos
@@ -80,6 +89,10 @@ class Consumer(private val topic: String, private val groupId: String) {
         while (true) {
             val records : ConsumerRecords<String, String> = consumer.poll(Duration.ofMillis(200))
             for (record in records ) {
+                val document = Document("key", record.key())
+                    .append("value", record.value())
+                collection.insertOne(document)
+
                 logger.info(
                             "\n" + "\n" + "\n" +
                             "Key: " + record.key() + "\n" +
